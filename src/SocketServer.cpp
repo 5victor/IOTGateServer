@@ -113,7 +113,7 @@ bool SocketServer::threadLoop()
 	LOG("enter %s", __PRETTY_FUNCTION__);
 	do {
 		ret = listen(sfd, 5);
-		afd = accept(sfd, (struct sockaddr *)&addr, &addr_len);
+		int afd = accept(sfd, (struct sockaddr *)&addr, &addr_len);
 		if (afd < 0) {
 			LOG("%s:accept fail", __PRETTY_FUNCTION__);
 			continue;
@@ -144,6 +144,7 @@ bool SocketServer::threadLoop()
 		SocketSession *ss = new SocketSession();
 		ss->init(ssl, this);
 		sessions.push_back(ss);
+		LOG("start a new SocketSession");
 		ss->start();
 	} while (1);
 

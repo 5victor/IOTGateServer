@@ -66,7 +66,7 @@ public:
 
 private:
 	int sfd;
-	int afd;
+	//int afd;
 	int port;
 	Server *server;
 enum state {
