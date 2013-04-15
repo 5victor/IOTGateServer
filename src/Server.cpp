@@ -188,7 +188,7 @@ int Server::getNodeEndpoints(uint16_t nwkaddr, vector<Endpoint *> &endpoints)
 	epcount = *(uint8_t *)&result->data[5];
 	eplist = &result->data[6];
 
-	for(int i; i < epcount; i++) {
+	for(int i = 0; i < epcount; i++) {
 		Endpoint *ep;
 		ep = getEndpoint(nwkaddr, eplist[i]);
 		if (ep == NULL) {
@@ -218,7 +218,7 @@ Endpoint *Server::getEndpoint(uint16_t nwkaddr, int index)
 
 	result = znp->waitAREQ(0x45, 0x84);
 	if (!result) {
-		D("%s:ZDO_SIMPLE_DESC_RSP fail");
+		D("%s:ZDO_SIMPLE_DESC_RSP fail", __FUNCTION__);
 		return NULL;
 	}
 
@@ -230,7 +230,7 @@ Endpoint *Server::getEndpoint(uint16_t nwkaddr, int index)
 	ep->setDeviceID(*(uint16_t *)&data[9]);
 	ep->setInClusters(data[12], (uint16_t *)&data[13]);
 	int outnumoffset = 12 + data[12] * sizeof(uint16_t);
-	ep->setOutClusters(data[outnumoffset], (uint16_t *)data[outnumoffset+1]);
+	ep->setOutClusters((int)data[outnumoffset], (uint16_t *)&data[outnumoffset+1]);
 
 	freeFrame(result);
 

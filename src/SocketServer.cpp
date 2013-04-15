@@ -104,6 +104,31 @@ int SocketServer::initSSL()
 	return 0;
 }
 
+int SocketServer::newSocketSession(SSL *ssl)
+{
+	SocketSession *ss = new SocketSession();
+
+	if (ss == NULL)
+		return -1;
+	ss->init(ssl, this);
+	sessions.push_back(ss);
+	LOG("start a new SocketSession");
+	ss->start();
+
+	return 0;
+}
+
+void SocketServer::freeSocketSession(SocketSession *session)
+{
+	vector<SocketSession *>::iterator it;
+	for (it = sessions.begin() ; it != sessions.end(); ++it) {
+		if ((*it) == session) {
+			sessions.erase(it);
+		}
+	}
+	delete session;
+}
+
 bool SocketServer::threadLoop()
 {
 	struct sockaddr_in addr;
@@ -141,11 +166,7 @@ bool SocketServer::threadLoop()
 			continue;
 		}
 
-		SocketSession *ss = new SocketSession();
-		ss->init(ssl, this);
-		sessions.push_back(ss);
-		LOG("start a new SocketSession");
-		ss->start();
+		newSocketSession(ssl);
 	} while (1);
 
 
