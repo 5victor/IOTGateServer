@@ -32,6 +32,7 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := openssl/server.pem
 LOCAL_MODULE := server.pem
 LOCAL_MODULE_PATH := $(TARGET_OUT_ETC)/iot/
+LOCAL_MODULE_CLASS := FAKE
 LOCAL_MODULE_TAGS := optional
 include $(BUILD_PREBUILT)
 
@@ -40,5 +41,6 @@ include $(CLEAR_VARS)
 LOCAL_SRC_FILES := openssl/server.key
 LOCAL_MODULE := server.key
 LOCAL_MODULE_PATH := $(TARGET_OUT_ETC)/iot/
+LOCAL_MODULE_CLASS := FAKE
 LOCAL_MODULE_TAGS := optional
 include $(BUILD_PREBUILT)

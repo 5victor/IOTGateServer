@@ -47,7 +47,7 @@ bool SocketSession::threadLoop()
 			*/
 
 		ret = SSL_read(ssl, &hdr, sizeof(hdr));
-
+		D("%s:recv cmd=%d,len=%d", __FUNCTION__, hdr.cmd, hdr.data_len);
 		switch (hdr.cmd) {
 		case GET_TOKEN:
 			handleGetToken(hdr);
@@ -75,6 +75,6 @@ void SocketSession::handleGetToken(struct hdr hdr)
 
 	ret = SSL_write(ssl, &hdr, sizeof(struct hdr));
 	if (ret != sizeof(struct hdr)) {
-		LOG("%s:SSL_write fail %d", ret);
+		LOG("%s:SSL_write fail %d", __FUNCTION__, ret);
 	}
 }

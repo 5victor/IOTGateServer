@@ -140,7 +140,7 @@ bool SocketServer::threadLoop()
 		ret = listen(sfd, 5);
 		int afd = accept(sfd, (struct sockaddr *)&addr, &addr_len);
 		if (afd < 0) {
-			LOG("%s:accept fail", __PRETTY_FUNCTION__);
+			LOG("%s:accept fail %d", __PRETTY_FUNCTION__, afd);
 			continue;
 		}
 //		fcntl(afd,F_SETFL,fcntl(afd,F_GETFL,0) | O_NONBLOCK);
@@ -148,7 +148,7 @@ bool SocketServer::threadLoop()
 		SSL *ssl = SSL_new(ctx);
 		if (!ssl) {
 			LOG("SSL_new fail");
-			SSL_free(ssl);
+			//SSL_free(ssl);
 			continue;
 		}
 
