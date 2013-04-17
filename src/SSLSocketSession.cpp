@@ -17,12 +17,13 @@ SocketSession::SocketSession() {
 SocketSession::~SocketSession() {
 	// TODO Auto-generated destructor stub
 	D("%s:called", __PRETTY_FUNCTION__);
+	SSL_free(ssl);
 //	socketserver->freeSocketSession(this); //在delete时才会调用析构函数吧
 }
 
-void SocketSession::init(int fd, SocketServer *server)
+void SocketSession::init(SSL *ssl, SocketServer *server)
 {
-	afd = fd;
+	this->ssl = ssl;
 	this->socketserver = server;
 }
 
@@ -39,8 +40,13 @@ bool SocketSession::threadLoop()
 	//uint8_t sof;
 
 	do {
+		/*
+		ret = SSL_read(ssl, &sof, 1);
+		if (ret != 1 || sof != SOF)
+			continue;
+			*/
 
-		ret = read(afd, &hdr, sizeof(hdr));
+		ret = SSL_read(ssl, &hdr, sizeof(hdr));
 		D("%s:recv cmd=%d,len=%d", __FUNCTION__, hdr.cmd, hdr.data_len);
 		switch (hdr.cmd) {
 		case GET_TOKEN:
@@ -67,7 +73,7 @@ void SocketSession::handleGetToken(struct hdr hdr)
 	hdr.cmd = GET_TOKEN;
 	hdr.data_len = 0;
 
-	ret = write(afd, &hdr, sizeof(struct hdr));
+	ret = SSL_write(ssl, &hdr, sizeof(struct hdr));
 	if (ret != sizeof(struct hdr)) {
 		LOG("%s:SSL_write fail %d", __FUNCTION__, ret);
 	}

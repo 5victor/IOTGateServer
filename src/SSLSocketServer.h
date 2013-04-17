@@ -47,12 +47,17 @@ enum state {
 
 private:
 	vector<SocketSession *> sessions;
-	int newSocketSession(int fd);
+	int newSocketSession(SSL *ssl);
 	void freeSocketSession(SocketSession *session);
 
 private:
-	int initSocket();
+#define PEMFILE ("/system/etc/iot/server.pem")
+#define KEYFILE ("/system/etc/iot/server.key")
+	SSL_CTX *ctx;
 
+private:
+	int initSocket();
+	int initSSL();
 public:
 	bool threadLoop();
 };

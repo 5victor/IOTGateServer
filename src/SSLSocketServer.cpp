@@ -33,6 +33,7 @@ int SocketServer::init(Server *server)
 	if (ret)
 		return ret;
 
+	ret = initSSL();
 	return ret;
 }
 
@@ -67,13 +68,49 @@ int SocketServer::initSocket()
 	return 0;
 }
 
-int SocketServer::newSocketSession(int fd)
+int passwd_cb(char *buf, int size, int flag, void *data)
+{
+	strcpy(buf, "123456");
+	return strlen(buf);
+}
+
+int SocketServer::initSSL()
+{
+	int ret;
+
+	SSL_library_init();
+	SSL_load_error_strings();
+	ERR_load_BIO_strings();
+	ERR_load_SSL_strings();
+	OpenSSL_add_all_algorithms();
+
+	ctx = SSL_CTX_new(SSLv23_server_method());
+	if (!ctx) {
+		LOG("SSL_CTX_new fail");
+		return -1;
+	}
+	SSL_CTX_set_default_passwd_cb(ctx, passwd_cb);
+	ret = SSL_CTX_use_certificate_file(ctx, PEMFILE, SSL_FILETYPE_PEM);
+	if (ret != 1) {
+		LOG("SSL_CTX_use_certificate_file %d", ret);
+		return ret;
+	}
+	ret = SSL_CTX_use_PrivateKey_file(ctx, KEYFILE, SSL_FILETYPE_PEM);
+	if (ret != 1) {
+		LOG("SSL_CTX_use_PrivateKey_file %d", ret);
+		return ret;
+	}
+	LOG("%s:initSSL OK", __FUNCTION__);
+	return 0;
+}
+
+int SocketServer::newSocketSession(SSL *ssl)
 {
 	SocketSession *ss = new SocketSession();
 
 	if (ss == NULL)
 		return -1;
-	ss->init(fd, this);
+	ss->init(ssl, this);
 	sessions.push_back(ss);
 	LOG("start a new SocketSession");
 	ss->start();
@@ -108,8 +145,28 @@ bool SocketServer::threadLoop()
 		}
 //		fcntl(afd,F_SETFL,fcntl(afd,F_GETFL,0) | O_NONBLOCK);
 		D("%s:connect from %s", __PRETTY_FUNCTION__, inet_ntoa(addr.sin_addr));
+		SSL *ssl = SSL_new(ctx);
+		if (!ssl) {
+			LOG("SSL_new fail");
+			//SSL_free(ssl);
+			continue;
+		}
 
-		newSocketSession(afd);
+		ret = SSL_set_fd(ssl, afd);
+		if (ret != 1) {
+			LOG("SSL_set_fd fail %d", ret);
+			SSL_free(ssl);
+			continue;
+		}
+
+		ret = SSL_accept(ssl);
+		if (ret != 1) {
+			LOG("SSL_accept fail %d", ret);
+			SSL_free(ssl);
+			continue;
+		}
+
+		newSocketSession(ssl);
 	} while (1);
 
 

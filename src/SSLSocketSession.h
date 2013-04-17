@@ -62,11 +62,11 @@ class SocketSession : public Thread {
 public:
 	SocketSession();
 	virtual ~SocketSession();
-	void init(int fd, SocketServer *server);
+	void init(SSL *ssl, SocketServer *server);
 	void start();
 
 private:
-	int afd;
+	SSL *ssl;
 	SocketServer *socketserver;
 	uint8_t token;
 
