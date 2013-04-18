@@ -279,3 +279,13 @@ error:
 	delete node;
 	return ret;
 }
+
+int Server::getNodeNum()
+{
+	return nodes.size();
+}
+
+Node *Server::getNode(int i)
+{
+	return nodes.at(i);
+}

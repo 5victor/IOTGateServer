@@ -30,6 +30,8 @@ public:
 	ZNP *getZNP();
 	int startNetwork(int panid, unsigned int chanlist = 0x00008000);
 	void setSocketServer(SocketServer *ss);
+	int getNodeNum();
+	Node *getNode(int i);
 
 //commit command, run in threadLoop()
 public:
