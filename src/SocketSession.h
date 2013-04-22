@@ -33,6 +33,8 @@ private:
 
 private:
 	bool threadLoop();
+	int readHead(struct hdr *h);
+	void flushData(struct hdr *h);
 
 private:
 	void handleGetToken(struct hdr hdr);

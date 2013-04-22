@@ -259,7 +259,7 @@ int Server::addNode(uint16_t nwkaddr)
 		ret = -1;
 		goto error_wait;
 	}
-	node->setType((*(uint8_t *)&result->data[4]) & 7);
+	node->setType((*(uint8_t *)&result->data[5]) & 7);
 	freeFrame(result);
 
 	ret = getNodeEndpoints(nwkaddr, node->getEndpoints());

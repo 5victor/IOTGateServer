@@ -32,6 +32,38 @@ void SocketSession::start()
 	this->run();
 }
 
+int SocketSession::readHead(struct hdr *h)
+{
+	int ret;
+	int readed;
+	uint8_t *p = (uint8_t *)h;
+	readed = 0;
+	while(1) {
+		ret = read(afd, &p[readed], sizeof(struct hdr) - readed);
+		if (!ret)
+			return -1;
+
+		readed += ret;
+		if (readed == sizeof(struct hdr))
+			break;
+	}
+
+	return 0;
+}
+
+void SocketSession::flushData(struct hdr *h)
+{
+	int i;
+	int ret;
+
+	for (i = 0; i < h->data_len; i++) {
+		int buf;
+		ret = read(afd, &buf, 1);
+		if (ret <= 0)
+			return;
+	}
+}
+
 bool SocketSession::threadLoop()
 {
 	LOG("enter %s", __PRETTY_FUNCTION__);
@@ -41,8 +73,12 @@ bool SocketSession::threadLoop()
 
 	do {
 
-		ret = read(afd, &hdr, sizeof(hdr));
-		D("%s:recv cmd=%d,len=%d", __FUNCTION__, hdr.cmd, hdr.data_len);
+		ret = readHead(&hdr);
+		D("%s:socket read return %d", __PRETTY_FUNCTION__, ret);
+		D("%s:recv token=%d,cmd=%d,len=%d", __FUNCTION__, hdr.token, hdr.cmd, hdr.data_len);
+		if (ret) {
+			break;
+		}
 		switch (hdr.cmd) {
 		case GET_TOKEN:
 			handleGetToken(hdr);
@@ -59,7 +95,7 @@ bool SocketSession::threadLoop()
 
 	}while (1);
 
-	socketserver->freeSocketSession(this);
+	//socketserver->freeSocketSession(this);
 	return true;
 }
 
@@ -80,18 +116,21 @@ void SocketSession::handleGetToken(struct hdr hdr)
 	}
 }
 
-void SocketSession::handleQueryNodeNum(struct hdr hdr)
+void SocketSession::handleQueryNodeNum(struct hdr h)
 {
 	uint32_t nodeNum;
 	int ret;
 
+	struct hdr hdr = h;
 	hdr.data_len = 4;
 
 	ret = write(afd, &hdr, sizeof(struct hdr));
 	if (ret != sizeof(struct hdr)) {
 		LOG("%s:write hdr fail %d", __FUNCTION__, ret);
 	}
+
 	nodeNum = server->getNodeNum();
+	D("%s:data_len %d, nodeNum %d", __FUNCTION__, hdr.data_len, nodeNum);
 	ret = write(afd, &nodeNum, sizeof(uint32_t));
 
 	if (ret != sizeof(uint32_t))

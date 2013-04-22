@@ -58,7 +58,7 @@ bool SocketSession::threadLoop()
 
 	}while (1);
 
-	socketserver->freeSocketSession(this);
+	//socketserver->freeSocketSession(this);
 	return true;
 }
 
