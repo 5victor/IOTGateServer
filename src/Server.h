@@ -32,6 +32,7 @@ public:
 	void setSocketServer(SocketServer *ss);
 	int getNodeNum();
 	Node *getNode(int i);
+	Node *getNode(uint16_t nwkaddr);
 
 //commit command, run in threadLoop()
 public:

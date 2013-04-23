@@ -225,6 +225,7 @@ Endpoint *Server::getEndpoint(uint16_t nwkaddr, int index)
 	Endpoint *ep = new Endpoint;
 
 	data = result->data;
+	ep->setNWKAddr(*(uint16_t *)&data[3]);
 	ep->setIndex(data[6]);
 	ep->setProfileID(*(uint16_t *)&data[7]);
 	ep->setDeviceID(*(uint16_t *)&data[9]);
@@ -288,4 +289,17 @@ int Server::getNodeNum()
 Node *Server::getNode(int i)
 {
 	return nodes.at(i);
+}
+
+Node *Server::getNode(uint16_t nwkaddr)
+{
+	int i;
+
+	for (i = 0; i < nodes.size(); i++) {
+		Node *node = nodes.at(i);
+		if(node->getNWKAddr() == nwkaddr)
+			return node;
+	}
+
+	return NULL;
 }

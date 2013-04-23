@@ -35,11 +35,15 @@ private:
 	bool threadLoop();
 	int readHead(struct hdr *h);
 	void flushData(struct hdr *h);
+	int readData(void *buf, int num);
+	int writeData(void *buf, int num);
+	int writeHead(struct hdr *h);
 
 private:
 	void handleGetToken(struct hdr hdr);
 	void handleQueryNodeNum(struct hdr hdr);
 	void handleQueryNodes(struct hdr hdr);
+	void handleQueryEndpoints(struct hdr hdr);
 };
 
 #endif /* SOCKETSESSION_H_ */

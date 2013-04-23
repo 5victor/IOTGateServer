@@ -89,7 +89,7 @@ void SocketServer::freeSocketSession(SocketSession *session)
 			sessions.erase(it);
 		}
 	}
-	delete session;
+	//delete session; SocketSession inherit Thread, Thread auto delete
 }
 
 bool SocketServer::threadLoop()
