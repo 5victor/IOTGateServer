@@ -43,6 +43,14 @@ void Node::setIEEEAddr(unsigned char addr[])
 	memcpy(ieeeaddr, addr, 8);
 }
 
+void Node::setIEEEAddrFromRsp(uint8_t addr[])
+{
+	int i, j;
+	for (i = 0, j = 7; i < 8; i++, j--) {
+		ieeeaddr[j] = addr[i];
+	}
+}
+
 uint8_t *Node::getIEEEAddr()
 {
 	return ieeeaddr;

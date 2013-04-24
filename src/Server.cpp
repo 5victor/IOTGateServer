@@ -187,7 +187,7 @@ int Server::getNodeEndpoints(uint16_t nwkaddr, vector<Endpoint *> &endpoints)
 
 	epcount = *(uint8_t *)&result->data[5];
 	eplist = &result->data[6];
-
+	LOG("%s:Node have %d endpoints", __FUNCTION__, epcount);
 	for(int i = 0; i < epcount; i++) {
 		Endpoint *ep;
 		ep = getEndpoint(nwkaddr, eplist[i]);
@@ -210,6 +210,7 @@ Endpoint *Server::getEndpoint(uint16_t nwkaddr, int index)
 	uint8_t *data;
 
 	D("%s", __PRETTY_FUNCTION__);
+	LOG("%s:Endpoint index=%d", __FUNCTION__, index);
 	ret = znp->ZDO_SIMPLE_DESC_REQ(nwkaddr, index);
 	if (ret) {
 		D("%s:ZDO_SIMPLE_DESC_REQ fail %d", __FUNCTION__, ret);
@@ -230,7 +231,8 @@ Endpoint *Server::getEndpoint(uint16_t nwkaddr, int index)
 	ep->setProfileID(*(uint16_t *)&data[7]);
 	ep->setDeviceID(*(uint16_t *)&data[9]);
 	ep->setInClusters(data[12], (uint16_t *)&data[13]);
-	int outnumoffset = 12 + data[12] * sizeof(uint16_t);
+	int outnumoffset = 13 + data[12] * sizeof(uint16_t);
+	D("%s:outnumoffset=%d", __FUNCTION__, outnumoffset);
 	ep->setOutClusters((int)data[outnumoffset], (uint16_t *)&data[outnumoffset+1]);
 
 	freeFrame(result);
@@ -261,6 +263,15 @@ int Server::addNode(uint16_t nwkaddr)
 		goto error_wait;
 	}
 	node->setType((*(uint8_t *)&result->data[5]) & 7);
+	freeFrame(result);
+
+	ret = znp->ZDO_IEEE_ADDR_REQ(nwkaddr, 0, 0);
+	if (ret) {
+		LOG("%s:ZDO_IEEE_ADDR_REQ fail %d", __FUNCTION__, ret);
+		return ret;
+	}
+	result = znp->waitAREQ(0x45, 0x81);
+	node->setIEEEAddrFromRsp((uint8_t *)&result->data[1]);
 	freeFrame(result);
 
 	ret = getNodeEndpoints(nwkaddr, node->getEndpoints());

@@ -25,9 +25,9 @@ public:
 	void setDeviceID(uint16_t deviceid);
 	uint16_t getDeviceID();
 	void setInClusters(int num, uint16_t list[]);
-	int getInClusters(uint16_t **list);
+	int getInClusters(uint16_t list[]);
 	void setOutClusters(int num, uint16_t list[]);
-	int getOutClusters(uint16_t **list);
+	int getOutClusters(uint16_t list[]);
 private:
 	uint8_t index;
 	uint16_t nwkaddr;

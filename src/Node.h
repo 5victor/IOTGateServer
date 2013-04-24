@@ -25,6 +25,7 @@ public:
 	int getType();
 	void setType(int type);
 	void setIEEEAddr(uint8_t addr[]);
+	void setIEEEAddrFromRsp(uint8_t addr[]);
 	uint8_t *getIEEEAddr();
 /*
 	void addEndpoint(Endpoint *endpoint);

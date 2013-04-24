@@ -127,7 +127,7 @@ bool SocketSession::threadLoop()
 
 	}while (1);
 
-	socketserver->freeSocketSession(this);
+	//socketserver->freeSocketSession(this);
 	return true;
 }
 
@@ -181,7 +181,7 @@ void SocketSession::handleQueryNodes(struct hdr hdr)
 	}
 
 	for (int i = 0; i < nodeNum; i++) {
-		struct Node *Node = server->getNode(i);
+		Node *Node = server->getNode(i);
 		node.nwkaddr = Node->getNWKAddr();
 		node.type = Node->getType();
 		node.epnum = Node->getEndpoints().size();
@@ -208,15 +208,24 @@ void SocketSession::handleQueryEndpoints(struct hdr hdr)
 		return ;
 	}
 
+	Node *node = server->getNode(nwkaddr);
+	vector<Endpoint *>endpoints = node->getEndpoints();
+
+	hdr.data_len = endpoints.size() * sizeof(struct endpoint);
 	ret = writeHead(&hdr);
 	if (ret < 0)
 		LOG("%s:writeHead error", __FUNCTION__);
 
-	Node *node = server->getNode(nwkaddr);
-	vector<Endpoint *>endpoints = node->getEndpoints();
 	for (i = 0; i < endpoints.size(); i++) {
-		Endpoint *ep = endpoints.at(i);
-		ret = writeData(ep, sizeof(Endpoint));
+		Endpoint *Ep = endpoints.at(i);
+		struct endpoint ep;
+		ep.index = Ep->getIndex();
+		ep.nwkaddr = Ep->getNWKAddr();
+		ep.profileid = Ep->getProfileID();
+		ep.deviceid = Ep->getDeviceID();
+		ep.inclusternum = Ep->getInClusters(ep.inclusterlist);
+		ep.outclusternum = Ep->getOutClusters(ep.outclusterlist);
+		ret = writeData(&ep, sizeof(struct endpoint));
 		if (ret < 0) {
 			LOG("%s:write endpoint %d fail", __FUNCTION__, i);
 		}
