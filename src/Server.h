@@ -34,6 +34,9 @@ public:
 	Node *getNode(int i);
 	Node *getNode(uint16_t nwkaddr);
 
+	int sendClusterData(struct cluster_data *cd, SocketSession *session);
+	void recvClusterData(struct cluster_data *cd);
+
 //commit command, run in threadLoop()
 public:
 	void foundNode(uint16_t nwkaddr);
@@ -44,17 +47,13 @@ private:
 	Endpoint *getEndpoint(uint16_t nwkaddr, int index);
 
 private:
-//	static struct indicate *indicate;
-
-private:
-	void indicateHandle(struct indicate *areq);
-//	void waitIndicate(areq_type type);
 	int getNodelist(vector<uint16_t> list);
 
 private:
 	vector<Node *> nodes;
 	ZNP *znp;
 	SocketServer *socketserver;
+	struct cluster_session *sendcs; //bad imp, use list replace
 
 private:
 	enum Command {FOUND_NODE,};

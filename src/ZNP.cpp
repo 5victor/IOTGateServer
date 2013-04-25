@@ -9,14 +9,6 @@
 #include <fcntl.h>
 #include <stdlib.h>
 
-Mutex *ZNP::mutex;
-Mutex *ZNP::mutexwait;
-Condition *ZNP::condwait;
-int ZNP::cmd0;
-int ZNP::cmd1;
-FRAME *ZNP::waitframe;
-Server *ZNP::server;
-
 ZNP::ZNP() {
 	// TODO Auto-generated constructor stub
 	mutex = new Mutex(Mutex::SHARED);
@@ -33,9 +25,8 @@ ZNP::~ZNP() {
 int ZNP::initZNP(Server *server)
 {
 	mt = new MT();
-	mt->setAREQHandle(&ZNP::handleAREQ);
 	this->server = server;
-	return mt->start();
+	return mt->start(this);
 }
 
 FRAME *ZNP::waitAREQ(int cmd0, int cmd1)
@@ -74,12 +65,6 @@ FRAME *ZNP::waitAREQRelative(int cmd0, int cmd1, nsecs_t reltime)
 
 	mutex->unlock();
 	return ret ? NULL : waitframe;
-}
-
-
-void ZNP::setINDICATEhandle(INDICATE handle)
-{
-	indicate = handle;
 }
 
 void ZNP::handleAREQ(FRAME *frame)
@@ -123,11 +108,7 @@ void ZNP::handleAREQ(FRAME *frame)
 			break;
 		}
 	} else if (cmd0 == 0x04) {/* AF interface */
-		switch (frame->cmd1) {
-		default:
-			D("%s:unprocess cmd0=0x%x,cmd1=0x%x", __FUNCTION__, frame->cmd0, frame->cmd1);
-			break;
-		}
+		handleAREQAF(frame);
 	} else if (cmd0 == 0x05) {/* ZDO interface */
 		handleAREQZDO(frame);
 	} else if (cmd0 == 0x06) {/* SAPI interface */
@@ -177,6 +158,32 @@ void ZNP::handleAREQZDO(FRAME *frame)
 		freeFrame(frame);
 		break;
 	}
+}
+
+void ZNP::handleAREQAFIN(FRAME *frame)
+{
+	struct cluster_data *cd = new cluster_data;
+
+	uint8_t *buf = frame->data;
+
+	cd->cluster = *(uint16_t *)&buf[2];
+	cd->nwkaddr = *(uint16_t *)&buf[4];
+	cd->srcep = buf[5];
+	cd->dstep = buf[6];
+	cd->transid = buf[15];
+	cd->len = buf[16];
+	if (cd->len) {
+		cd->data = new uint8_t[cd->len];
+		memcpy(cd->data, &buf[17], cd->len);
+	}
+
+	server->recvClusterData(cd);
+}
+
+void ZNP::handleAREQAF(FRAME *frame)
+{
+	if (frame->cmd1 == 0x81)
+		handleAREQAFIN(frame);
 }
 
 FRAME *ZNP::sendSREQ(int cmd0, int cmd1)
@@ -343,6 +350,36 @@ int ZNP::ZDO_SIMPLE_DESC_REQ(uint16_t nwkaddr, uint8_t endpoint)
 	result = sendSREQ(0x25, 0x4, 5, data);
 	ret = getRet1Byte(result);
 	freeFrame(result);
+	return ret;
+}
+
+int ZNP::AF_DATA_REQUEST(struct cluster_data *cd)
+{
+	uint8_t *buf;
+	int ret;
+	FRAME *result;
+
+	D("%s:nwkaddr=0x%04x, dstep=%d, cluster=%d, len=%d, transid=%d", __FUNCTION__, nwkaddr, dstep, cluster, data_len, transid);
+
+	int len = 10 + cd->len;
+	buf = new uint8_t[len];
+
+	*(uint16_t *)buf = cd->nwkaddr;
+	buf[2] = cd->dstep;
+	buf[3] = cd->srcep;
+	*(uint16_t *)&buf[4] = cd->cluster;
+	buf[6] = cd->transid;
+	buf[7] = 0; //Options
+	buf[8] = 0; //Radius
+	buf[9] = cd->len; //
+	if (cd->len)
+		memcpy(&buf[10], cd->data, cd->len);
+
+	result = sendSREQ(0x24, 0x01, len, buf);
+	ret = getRet1Byte(result);
+	freeFrame(result);
+	delete buf;
+
 	return ret;
 }
 

@@ -13,6 +13,7 @@
 using namespace android;
 
 #include "common.h"
+#include "ZNP.h"
 
 /*
 struct SRSP {
@@ -26,41 +27,39 @@ struct SRSP {
 };
 */
 
-struct REQ {
-	FRAME *frame;
-	bool senderror;
-	FRAME *result;
-};
+class ZNP;
 
 class MT : public Thread {
 public:
 	MT();
-	int start(void);
+	int start(ZNP *znp);
 	virtual ~MT();
 	FRAME *sendSREQ(FRAME *send);
 	int sendAREQ(FRAME *send);
-	void setAREQHandle(AREQHANDLE handle);
 
 private:
-	static int ufd;
-	static REQ sreq;
-	static Mutex *mutexsend;
-	//static Condition *condsend;
-	static Mutex *mutexcomp;
-	static Condition *condcomp;
-	static Mutex *sendcomp; /* send complete */
+	ZNP *znp;
 
-	AREQHANDLE areqhandle;
+private:
+	int ufd;
+	Mutex *mutexsend;
+	//static Condition *condsend;
+	Mutex *mutexcomp;
+	Condition *condcomp;
+
+	FRAME *sreqresult;
+	FRAME *sreqsend;
+
 	bool threadLoop();
 
 private:
 	int initUart(void);
 	int initSignal(void);
-	static uint8_t calcFCS(uint8_t *pMsg,
+	uint8_t calcFCS(uint8_t *pMsg,
 			uint8_t len, uint8_t fcs);
 	void handleRecvFrame(FRAME *frame);
-	static void sigusr1(int sig);
 	FRAME *recvFrame();
+	int sendFrame(FRAME *frame);
 };
 
 #endif /* MT_H_ */

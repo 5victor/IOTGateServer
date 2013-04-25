@@ -25,6 +25,8 @@ public:
 	void init(int fd, SocketServer *server);
 	void start();
 
+	void recvClusterData(struct cluster_data *cd);
+
 private:
 	int afd;
 	SocketServer *socketserver;

@@ -314,3 +314,45 @@ Node *Server::getNode(uint16_t nwkaddr)
 
 	return NULL;
 }
+
+int Server::sendClusterData(struct cluster_data *cd, SocketSession *session)
+{
+	static uint8_t transid = 0;
+	int ret;
+	FRAME *result;
+	uint8_t *buf;
+	struct cluster_session *cs;
+
+	cd->transid = transid++;
+	ret = znp->AF_DATA_REQUEST(cd);
+	if (ret) {
+		D("%s:znp->AF_DATA_REQUEST fail %d", __FUNCTION__, ret);
+		return ret;
+	}
+
+	result = znp->waitAREQ(0x44, 0x80);
+	buf = result->data;
+	D("%s:znp->waitAREQ(0x44, 0x80) status=%d, endpoint=%d, transid=%d", __FUNCTION__, buf[0], buf[1], buf[2]);
+
+	cs = new struct cluster_session;
+	cs->data = cd;
+	cs->session = session;
+
+	sendcs = cs; //bad imp
+
+	return buf[0];
+}
+
+void Server::recvClusterData(struct cluster_data *cd)
+{
+	if (!sendcs)
+		return;
+
+	if(sendcs->data->transid == cd->transid) {
+		sendcs->session->recvClusterData(cd);
+		freeClusterData(sendcs->data);
+		delete sendcs;
+		sendcs = NULL;
+		freeClusterData(cd);
+	}
+}

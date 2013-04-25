@@ -18,13 +18,13 @@ using namespace android;
 #include "Server.h"
 
 class Server;
+class MT;
 
 class ZNP {
 public:
 	ZNP();
 	virtual ~ZNP();
 	int initZNP(Server *server);
-	void setINDICATEhandle(INDICATE handle);
 	FRAME *waitAREQ(int cmd0, int cmd1);
 	FRAME *waitAREQRelative(int cmd0, int cmd1, nsecs_t reltime);
 
@@ -55,23 +55,29 @@ public:
 	int ZDO_ACTIVE_EP_REQ(uint16_t nwkaddr);
 	int ZDO_SIMPLE_DESC_REQ(uint16_t nwkaddr, uint8_t endpoint);
 
+public:
+	//MT_AF
+	int AF_DATA_REQUEST(struct cluster_data *cd);
+
 
 private:
 	MT *mt;
-	INDICATE indicate;
-	static Server *server;
+	Server *server;
+
+public:
+	void handleAREQ(FRAME *frame);
+private:
+	void handleAREQZDO(FRAME *frame);
+	void handleAREQAF(FRAME *frame);
+	void handleAREQAFIN(FRAME *frame);
 
 private:
-	static void handleAREQ(FRAME *frame);
-	static void handleAREQZDO(FRAME *frame);
-
-private:
-	static Mutex *mutex;
-	static Mutex *mutexwait;
-	static Condition *condwait;
-	static int cmd0;
-	static int cmd1;
-	static FRAME *waitframe;
+	Mutex *mutex;
+	Mutex *mutexwait;
+	Condition *condwait;
+	int cmd0;
+	int cmd1;
+	FRAME *waitframe;
 };
 
 #endif /* ZNP_H_ */

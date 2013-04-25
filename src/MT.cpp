@@ -17,44 +17,29 @@
 #include "MT.h"
 #include "debug.h"
 
-int MT::ufd;
-REQ MT::sreq;
-Mutex *MT::mutexsend;
-Mutex *MT::mutexcomp;
-Condition *MT::condcomp;
-Mutex *MT::sendcomp;
 
 MT::MT() {
 	// TODO Auto-generated constructor stub
-	MT::mutexsend = new Mutex(Mutex::SHARED);
+	mutexsend = new Mutex(Mutex::SHARED);
 //	condsend = new Condition(SHARED);
-	MT::mutexcomp = new Mutex(Mutex::SHARED);
-	MT::condcomp = new Condition(Condition::SHARED);
-	MT::sendcomp = new Mutex(Mutex::SHARED);
-	MT::sendcomp->lock();
-
-	MT::sreq.frame = NULL;
-//	sreq.error = false;
-	MT::sreq.senderror = false;
-	areqhandle = NULL;
+	mutexcomp = new Mutex(Mutex::SHARED);
+	condcomp = new Condition(Condition::SHARED);
+	sreqsend = NULL;
 }
 
 MT::~MT() {
 	// TODO Auto-generated destructor stub
 }
 
-int MT::start(void)
+int MT::start(ZNP *znp)
 {
 	int ret;
+
+	this->znp = znp;
+
 	ret = initUart();
 	if (ret) {
 		D("initUart return %d", ret);
-		return ret;
-	}
-
-	ret = initSignal();
-	if (ret) {
-		D("initSignal return %d", ret);
 		return ret;
 	}
 
@@ -88,11 +73,6 @@ int MT::initUart(void)
 
 	tcsetattr(ufd, TCSANOW, &options);
 	return 0;
-}
-
-int MT::initSignal(void)
-{
-	return -(SIG_ERR == signal(SIGUSR1,MT::sigusr1));
 }
 
 uint8_t MT::calcFCS(uint8_t *pMsg,
@@ -193,19 +173,20 @@ bool MT::threadLoop()
 
 void MT::handleRecvFrame(FRAME *frame)
 {
-	if (sreq.frame != NULL) {
-		if ((sreq.frame->cmd0 & 0xFF) == (sreq.frame->cmd0 &0xFF)) {
-			if (sreq.frame->cmd1 == frame->cmd1) {
+	if (sreqsend) {
+		if ((sreqsend->cmd0 & 0xF) == (frame->cmd0 & 0xF)) {
+			if (sreqsend->cmd1 == frame->cmd1) {
 				D("%s:SRSP cmd0=0x%x, cmd1=0x%x", __FUNCTION__, frame->cmd0, frame->cmd1);
-				sreq.result = frame;
+				sreqresult = frame;
 				condcomp->signal();
 				return;
 			}
 		}
 	}
+
 	if ((frame->cmd0 & 0x40) == 0x40) {
-		if (areqhandle != NULL) {
-			areqhandle(frame);
+		if (znp) {
+			znp->handleAREQ(frame);
 			return;
 		} else {
 			D("%s:areqhandle == NULL", __FUNCTION__);
@@ -218,23 +199,16 @@ void MT::handleRecvFrame(FRAME *frame)
 FRAME *MT::sendSREQ(FRAME *send)
 {
 	FRAME *result;
-/*
-	if (sreq.frame) {
-		mutexsend->lock();
-		//condsend->wait(*mutexsend);
-		D("Some packet complete");
-	}
-*/
+	int ret;
+
 	mutexsend->lock();
 
-	sreq.frame = send;
-	kill(getpid(), SIGUSR1);
-
-	sendcomp->lock();
-	if (sreq.senderror) {
+	ret = sendFrame(send);
+	if (ret) {
 		result = NULL;
 		goto out;
 	}
+	sreqsend = send; //this var lock by mutexsend
 	D("%s:send complete and have no error\n", __FUNCTION__);
 
 	{
@@ -243,24 +217,23 @@ FRAME *MT::sendSREQ(FRAME *send)
 		D("%s: recv SRSP", __FUNCTION__);
 	}
 	//result = sreq.error ? NULL:sreq.result;
-	result = sreq.result;
+	result = sreqresult;
+	sreqsend = NULL;
 out:
 	mutexsend->unlock();
 //	delete sreq.frame->data;
 //	delete sreq.frame;
-	sreq.frame = NULL; /* need lock ?*/
 //	sreq.senderror = false;
 	return result;
 }
 
-void MT::sigusr1(int sig)
+int MT::sendFrame(FRAME *frame)
 {
 	int ret;
 	uint8_t sof = 0xFE;
-	FRAME *frame = sreq.frame;
 	uint8_t fcs;
 
-	D("sigusr1 enter");
+	D("%s:enter", __FUNCTION__);
 
 	ret = write(ufd, &sof, 1);
 	if (ret != 1)
@@ -288,23 +261,13 @@ void MT::sigusr1(int sig)
 		fcs = calcFCS(frame->data, frame->len, fcs);
 
 	ret = write(ufd, &fcs, 1);
-	if (ret != 1)
+	if (ret < 0)
 		goto error;
 
-	sreq.senderror = false;
-	sendcomp->unlock();
-	D("sigusr1 return");
-	return;
-error:
-	sendcomp->unlock();
-	sreq.senderror = true;
-	D("sigusr1 error return");
-	return;
-}
+	return 0;
 
-void MT::setAREQHandle(AREQHANDLE handle)
-{
-	areqhandle = handle;
+error:
+	return ret;
 }
 
 int MT::sendAREQ(FRAME *send)
@@ -312,18 +275,9 @@ int MT::sendAREQ(FRAME *send)
 	int ret;
 
 	MT::mutexsend->lock();
-	sreq.frame = send;
-	kill(getpid(), SIGUSR1);
 
-	sendcomp->lock();
-	if (sreq.senderror) {
-		ret = -1;
-		goto out;
-	}
+	ret = sendFrame(send);
 
-	ret = 0;
-out:
-	sreq.frame = NULL;
 	mutexsend->unlock();
 	return ret;
 }

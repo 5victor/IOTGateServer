@@ -231,3 +231,8 @@ void SocketSession::handleQueryEndpoints(struct hdr hdr)
 		}
 	}
 }
+
+void SocketSession::recvClusterData(struct cluster_data *cd)
+{
+
+}

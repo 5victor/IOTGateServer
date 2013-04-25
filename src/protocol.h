@@ -38,8 +38,11 @@ struct endpoint {
 }__attribute__ ((packed));
 
 struct cluster_hdr {
+	uint16_t nwkaddr;
 	uint16_t cluster;
-	int		data_len;
+	uint8_t srcep;
+	uint8_t dstep;
+	uint8_t	data_len;
 }__attribute__ ((packed));
 
 //#define SOF		'V'

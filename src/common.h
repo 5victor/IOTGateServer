@@ -15,13 +15,33 @@ struct FRAME {
 	unsigned char *data;
 };
 
-typedef void (*AREQHANDLE)(FRAME *frame);
-
 void inline freeFrame(FRAME *frame)
 {
 	delete frame->data;
 	delete frame;
 }
+
+struct cluster_data {
+	uint16_t nwkaddr;
+	uint8_t transid;
+	int8_t dstep;
+	int8_t srcep;
+	uint16_t cluster;
+	uint8_t len;
+	uint8_t *data;
+};
+
+void inline freeClusterData(struct cluster_data *cd)
+{
+	if (cd->data)
+		delete cd->data;
+	delete cd;
+}
+
+struct cluster_session {
+	struct cluster_data *data;
+	SocketSession *session;
+};
 
 /////////////////////////////////////////////////////////////
 
