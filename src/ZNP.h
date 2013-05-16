@@ -57,12 +57,14 @@ public:
 
 public:
 	//MT_AF
+	int AF_REGISTER();
 	int AF_DATA_REQUEST(struct cluster_data *cd);
 
 
 private:
 	MT *mt;
 	Server *server;
+	af_info afinfo;
 
 public:
 	void handleAREQ(FRAME *frame);

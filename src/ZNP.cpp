@@ -359,17 +359,18 @@ int ZNP::AF_DATA_REQUEST(struct cluster_data *cd)
 	int ret;
 	FRAME *result;
 
-	D("%s:nwkaddr=0x%04x, dstep=%d, cluster=%d, len=%d, transid=%d", __FUNCTION__, nwkaddr, dstep, cluster, data_len, transid);
+	D("%s:nwkaddr=0x%04x, dstep=%d, cluster=%d, len=%d, transid=%d", __FUNCTION__, cd->nwkaddr, cd->dstep, cd->cluster, cd->len, cd->transid);
+	D("%s:data[0]=%d", __FUNCTION__, cd->data[0]);
 
 	int len = 10 + cd->len;
 	buf = new uint8_t[len];
 
 	*(uint16_t *)buf = cd->nwkaddr;
 	buf[2] = cd->dstep;
-	buf[3] = cd->srcep;
+	buf[3] = afinfo.endpoint;
 	*(uint16_t *)&buf[4] = cd->cluster;
 	buf[6] = cd->transid;
-	buf[7] = 0; //Options
+	buf[7] = 0x10 | 0x20; //Options
 	buf[8] = 0; //Radius
 	buf[9] = cd->len; //
 	if (cd->len)
@@ -383,3 +384,24 @@ int ZNP::AF_DATA_REQUEST(struct cluster_data *cd)
 	return ret;
 }
 
+int ZNP::AF_REGISTER()
+{
+    int ret;
+    FRAME *result;
+
+    afinfo.endpoint = 2;
+    afinfo.profileID = 0x1112;
+    afinfo.deviceID = 1;
+    afinfo.devVer = 1;
+    afinfo.latencyReq = 0;
+    afinfo.numInCluster = 1;
+    afinfo.inCluster = 1;
+    afinfo.numOutCluster = 1;
+    afinfo.outCluster = 1;
+
+    result = sendSREQ(0x24, 0x00, sizeof(struct af_info), (uint8_t *)&afinfo);
+    ret = getRet1Byte(result);
+    freeFrame(result);
+
+    return ret;
+}

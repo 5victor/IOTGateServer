@@ -121,6 +121,9 @@ bool SocketSession::threadLoop()
 		case QUERY_NODE_ENDPOINTS:
 			handleQueryEndpoints(hdr);
 			break;
+        case SEND_CLUSTER_DATA:
+            handleSendClusterData(hdr);
+            break;
 		default:
 			LOG("%s:unhandel packet cmd=%d len=%d", __PRETTY_FUNCTION__, hdr.cmd, hdr.data_len);
 		};
@@ -232,7 +235,66 @@ void SocketSession::handleQueryEndpoints(struct hdr hdr)
 	}
 }
 
+void SocketSession::handleSendClusterData(struct hdr hdr)
+{
+    struct cluster_hdr chdr;
+    struct cluster_data cd;
+    int ret;
+    void *data;
+
+    ret = readData(&chdr, sizeof(struct cluster_hdr));
+    if (ret < 0) {
+        D("%s:read cluster_hdr fail", __FUNCTION__);
+        return ;
+    }
+
+    cd.nwkaddr = chdr.nwkaddr;
+    cd.cluster = chdr.cluster;
+    cd.srcep = chdr.srcep;
+    cd.dstep = chdr.dstep;
+    cd.len = chdr.data_len;
+
+    if (chdr.data_len > 0) {
+        data = malloc(chdr.data_len);
+        if (data == NULL)
+            return;
+        ret = readData(data, cd.len);
+        if (ret < 0) {
+            D("%s:read data fail", __FUNCTION__);
+            free(data);
+        }
+    } else {
+        cd.data = NULL;
+    }
+    ret = server->sendClusterData(&cd, this);
+    if (ret) {
+        D("%s:sendClusterData fail", __FUNCTION__);
+    }
+}
+
 void SocketSession::recvClusterData(struct cluster_data *cd)
 {
+    struct hdr hdr;
+    struct cluster_hdr chdr;
+    int ret;
+    D("SocketSession::%s:nwkaddr=0x%x,cluster=%d,dstep=%d,srcep=%d,len=%d", __FUNCTION__, cd->nwkaddr, cd->cluster, cd->dstep, cd->srcep, cd->len);
+    hdr.token = token;
+    hdr.cmd = SEND_CLUSTER_DATA;
+    hdr.data_len = 0;
 
+    writeHead(&hdr);
+
+    chdr.nwkaddr = cd->nwkaddr;
+    chdr.cluster = cd->cluster;
+    chdr.dstep = cd->dstep;
+    chdr.srcep = cd->srcep;
+    chdr.data_len = cd->len;
+
+    writeData(&chdr, sizeof(struct cluster_hdr));
+    D("%s:write cluster_hdr ok", __FUNCTION__);
+
+    if (chdr.data_len > 0) {
+        writeData(cd->data, cd->len);
+    }
+    D("%s:handle ok", __FUNCTION__);
 }

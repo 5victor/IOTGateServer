@@ -277,7 +277,7 @@ int MT::sendAREQ(FRAME *send)
 	MT::mutexsend->lock();
 
 	ret = sendFrame(send);
-
+    D("%s:complete", __FUNCTION__);
 	mutexsend->unlock();
 	return ret;
 }

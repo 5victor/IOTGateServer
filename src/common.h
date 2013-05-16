@@ -38,10 +38,25 @@ void inline freeClusterData(struct cluster_data *cd)
 	delete cd;
 }
 
+class SocketSession;
+
 struct cluster_session {
 	struct cluster_data *data;
 	SocketSession *session;
 };
+
+
+struct af_info {
+    uint8_t endpoint;
+    uint16_t profileID;
+    uint16_t deviceID;
+    uint8_t devVer;
+    uint8_t latencyReq;
+    uint8_t numInCluster; //num = 1
+    uint16_t inCluster;
+    uint8_t numOutCluster;
+    uint16_t outCluster;
+}__attribute__ ((packed));
 
 /////////////////////////////////////////////////////////////
 

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_layout_file>
+	<ActiveTarget name="Release" />
+	<File name="src/Endpoint.cpp" open="1" top="0" tabpos="1">
+		<Cursor position="298" topLine="12" />
+	</File>
+	<File name="src/MT.cpp" open="1" top="0" tabpos="11">
+		<Cursor position="4789" topLine="262" />
+	</File>
+	<File name="src/MT.h" open="1" top="0" tabpos="8">
+		<Cursor position="176" topLine="38" />
+	</File>
+	<File name="src/Server.cpp" open="1" top="1" tabpos="10">
+		<Cursor position="7107" topLine="345" />
+	</File>
+	<File name="src/Server.h" open="1" top="0" tabpos="12">
+		<Cursor position="436" topLine="19" />
+	</File>
+	<File name="src/SocketSession.cpp" open="1" top="0" tabpos="5">
+		<Cursor position="6394" topLine="279" />
+	</File>
+	<File name="src/SocketSession.h" open="1" top="0" tabpos="6">
+		<Cursor position="962" topLine="19" />
+	</File>
+	<File name="src/ZNP.cpp" open="1" top="0" tabpos="2">
+		<Cursor position="4036" topLine="159" />
+	</File>
+	<File name="src/ZNP.h" open="1" top="0" tabpos="3">
+		<Cursor position="1224" topLine="18" />
+	</File>
+	<File name="src/common.h" open="1" top="0" tabpos="4">
+		<Cursor position="905" topLine="36" />
+	</File>
+	<File name="src/main.cpp" open="1" top="0" tabpos="9">
+		<Cursor position="322" topLine="9" />
+	</File>
+	<File name="src/protocol.h" open="1" top="0" tabpos="7">
+		<Cursor position="943" topLine="38" />
+	</File>
+</CodeBlocks_layout_file>

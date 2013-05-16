@@ -40,6 +40,7 @@ int Server::startNetwork(int panid, unsigned int chanlist)
 	int ret;
 	int arg;
 
+
 	znp->SYS_RESET_REQ();
 	result = znp->waitAREQ(0x41, 0x80);
 
@@ -76,6 +77,12 @@ int Server::startNetwork(int panid, unsigned int chanlist)
 	if (ret) {
 		D("%s:ZCD_NV_ZDO_DIRECT_CB fail %d", __FUNCTION__, ret);
 		return ret;
+	}
+
+    ret = znp->AF_REGISTER();
+	if (ret) {
+        D("AF_REGISTER fail %d", ret);
+        return ret;
 	}
 
 	ret = znp->ZB_START_REQUEST();
@@ -323,6 +330,7 @@ int Server::sendClusterData(struct cluster_data *cd, SocketSession *session)
 	uint8_t *buf;
 	struct cluster_session *cs;
 
+    D("%s:transid=%d", __FUNCTION__, transid);
 	cd->transid = transid++;
 	ret = znp->AF_DATA_REQUEST(cd);
 	if (ret) {
@@ -345,14 +353,17 @@ int Server::sendClusterData(struct cluster_data *cd, SocketSession *session)
 
 void Server::recvClusterData(struct cluster_data *cd)
 {
+    D("Server::%s:transid=%d", __FUNCTION__, cd->transid);
+
 	if (!sendcs)
 		return;
 
 	if(sendcs->data->transid == cd->transid) {
 		sendcs->session->recvClusterData(cd);
-		freeClusterData(sendcs->data);
+		//freeClusterData(sendcs->data);
 		delete sendcs;
 		sendcs = NULL;
-		freeClusterData(cd);
+		//freeClusterData(cd);
 	}
+	D("Server::%s end of function", __FUNCTION__);
 }

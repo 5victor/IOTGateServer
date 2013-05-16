@@ -46,6 +46,7 @@ private:
 	void handleQueryNodeNum(struct hdr hdr);
 	void handleQueryNodes(struct hdr hdr);
 	void handleQueryEndpoints(struct hdr hdr);
+	void handleSendClusterData(struct hdr hdr);
 };
 
 #endif /* SOCKETSESSION_H_ */

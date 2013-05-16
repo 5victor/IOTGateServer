@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="IOTGateServer" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Release">
+				<Option output="bin/Release/IOTGateServer" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+		</Compiler>
+		<Unit filename="src/Endpoint.cpp" />
+		<Unit filename="src/Endpoint.h" />
+		<Unit filename="src/MT.cpp" />
+		<Unit filename="src/MT.h" />
+		<Unit filename="src/Node.cpp" />
+		<Unit filename="src/Node.h" />
+		<Unit filename="src/SSLSocketServer.cpp" />
+		<Unit filename="src/SSLSocketServer.h" />
+		<Unit filename="src/SSLSocketSession.cpp" />
+		<Unit filename="src/SSLSocketSession.h" />
+		<Unit filename="src/Server.cpp" />
+		<Unit filename="src/Server.h" />
+		<Unit filename="src/SocketServer.cpp" />
+		<Unit filename="src/SocketServer.h" />
+		<Unit filename="src/SocketSession.cpp" />
+		<Unit filename="src/SocketSession.h" />
+		<Unit filename="src/ZNP.cpp" />
+		<Unit filename="src/ZNP.h" />
+		<Unit filename="src/common.h" />
+		<Unit filename="src/debug.h" />
+		<Unit filename="src/indicate.h" />
+		<Unit filename="src/main.cpp" />
+		<Unit filename="src/protocol.h" />
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
